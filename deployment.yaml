@@ -1,0 +1,22 @@
+# File: deployment.yaml
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: register-app
+  labels:
+    app: register-app
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      app: register-app
+  template:
+    metadata:
+      labels:
+        app: register-app
+    spec:
+      containers:
+      - name: register-app
+        image: mohanccdevops/register-app:latest  # Replace with your image if needed
+        ports:
+        - containerPort: 8080
