@@ -17,6 +17,6 @@ spec:
     spec:
       containers:
       - name: register-app
-        image: mohanccdevops/register-app:latest  # Replace with your image if needed
+        image: mohancc1/register-app-pipeline:1.0.0-46  # Replace with your image if needed
         ports:
         - containerPort: 8080
