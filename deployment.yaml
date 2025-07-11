@@ -17,6 +17,6 @@ spec:
     spec:
       containers:
       - name: register-app
-        image: mohancc1/register-app-pipeline:latest  # Replace with your image if needed
+        image: ghcr.io/mohancc1/register-app-pipeline:latest  # Replace with your image if needed
         ports:
         - containerPort: 8080
