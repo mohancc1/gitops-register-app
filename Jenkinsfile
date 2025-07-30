@@ -52,23 +52,14 @@ pipeline {
 
         stage("SonarQube Analysis") {
             steps {
-                script {
-                    // Check if the JAR_PATH actually exists before proceeding with SonarQube analysis,
-                    // especially if coverage reports are expected to be present.
-                    // This is more of a defensive check, 'mvn clean package' should have created it.
-                    if (fileExists(env.JAR_PATH)) {
-                        echo "JAR file found at: ${env.JAR_PATH}"
-                    } else {
-                        echo "WARNING: JAR file not found at expected path: ${env.JAR_PATH}. SonarQube analysis might be incomplete if it relies on this artifact."
-                    }
-                }
-                withSonarQubeEnv('sonarqube-server') { // Ensure 'sonarqube-server' is configured in Jenkins
+                withSonarQubeEnv('sonarqube-server') {
                     sh '''
                         mvn sonar:sonar \
                         -Dsonar.projectKey=$SONAR_PROJECT_KEY \
                         -Dsonar.host.url=http://34.204.170.100:9000 \
                         -Dsonar.login=$SONAR_TOKEN
                     '''
+
                 }
             }
         }
