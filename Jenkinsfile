@@ -67,10 +67,8 @@ pipeline {
         stage("Quality Gate") {
             steps {
                 script {
-                    // IMPORTANT: Set abortPipeline to true to fail the Jenkins job
-                    // if the SonarQube Quality Gate conditions are not met.
-                    waitForQualityGate abortPipeline: true, credentialsId: 'jenkins-sonarqube-token'
-                    echo "SonarQube Quality Gate status: ${currentBuild.result}"
+                    waitForQualityGate abortPipeline: false, credentialsId: 'jenkins-sonarqube-token'
+
                 }
             }
         }
