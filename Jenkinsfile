@@ -73,11 +73,11 @@ pipeline {
             }
         }
 
-        stage("Build & Push Docker Image") {
+                stage("Build & Push Docker Image") {
             steps {
                 withCredentials([
                     usernamePassword(
-                        credentialsId: 'dockerhub', // Ensure this credential ID for Docker Hub is correct
+                        credentialsId: 'dockerhub',
                         usernameVariable: 'DOCKER_USER',
                         passwordVariable: 'DOCKER_PASS'
                     )
@@ -85,20 +85,10 @@ pipeline {
                     script {
                         def imageName = "${DOCKER_USER}/${APP_NAME}"
 
-                        // Using the Docker Pipeline plugin's `withRegistry` block for authentication
                         docker.withRegistry('https://index.docker.io/v1/', 'dockerhub') {
-                            // Build the Docker image from the current directory (workspace root)
-                            // The Dockerfile MUST be updated to correctly COPY the JAR from `server/target/`
-                            def dockerImage = docker.build(imageName, '.')
-                            echo "Successfully built Docker image: ${imageName}:${IMAGE_TAG}"
-
-                            // Push the image with the specific tag (e.g., 1.0.0-1)
+                            def dockerImage = docker.build(imageName)
                             dockerImage.push("${IMAGE_TAG}")
-                            echo "Successfully pushed Docker image: ${imageName}:${IMAGE_TAG}"
-
-                            // Push the image with the 'latest' tag
                             dockerImage.push("latest")
-                            echo "Successfully pushed Docker image: ${imageName}:latest"
                         }
                     }
                 }
@@ -109,20 +99,36 @@ pipeline {
             steps {
                 withCredentials([
                     usernamePassword(
-                        credentialsId: 'dockerhub', // Use the same Docker Hub credentials for Trivy if needed
+                        credentialsId: 'dockerhub',
                         usernameVariable: 'DOCKER_USER',
                         passwordVariable: 'DOCKER_PASS'
                     )
                 ]) {
-                    sh """
-                        # Pull the Trivy image and run the scan
-                        docker run -v /var/run/docker.sock:/var/run/docker.sock \\
-                        aquasec/trivy image ${DOCKER_USER}/${APP_NAME}:latest \\
-                        --no-progress --scanners vuln \\
-                        --exit-code 0 --severity HIGH,CRITICAL --format table
-                        # exit-code 0 means success even if vulnerabilities are found.
-                        # Change to --exit-code 1 if you want the pipeline to fail on HIGH/CRITICAL vulnerabilities.
-                    """
+                    script {
+                        sh """
+                            docker run -v /var/run/docker.sock:/var/run/docker.sock \
+                            aquasec/trivy image ${DOCKER_USER}/${APP_NAME}:latest \
+                            --no-progress --scanners vuln \
+                            --exit-code 0 --severity HIGH,CRITICAL --format table
+                        """
+                    }
+                }
+            }
+        }
+
+        stage("Cleanup Artifacts") {
+            steps {
+                withCredentials([
+                    usernamePassword(
+                        credentialsId: 'dockerhub',
+                        usernameVariable: 'DOCKER_USER',
+                        passwordVariable: 'DOCKER_PASS'
+                    )
+                ]) {
+                    script {
+                        sh "docker rmi ${DOCKER_USER}/${APP_NAME}:${IMAGE_TAG} || true"
+                        sh "docker rmi ${DOCKER_USER}/${APP_NAME}:latest || true"
+                    }
                 }
             }
         }
